@@ -46,8 +46,7 @@ public:
             throw std::length_error("Max array exceeded.");
         }
         // TODO
-        topIndex++; // Increment topIndex
-        array[topIndex] = value; // Store the value
+        array[++topIndex] = value; // Increment topIndex & Store the value
     }
 
     T peek() const override 
