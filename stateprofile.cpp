@@ -1,6 +1,5 @@
-
 #include <iostream>
-#include <fstream>
+#include <fstream> // for 'ifstream'
 #include <sstream>
 #include <vector>
 #include <string>
@@ -20,13 +19,19 @@ namespace fs = std::filesystem;
 // ---------------------------
 // File and Directory Paths
 // ---------------------------
-const string HEART_RATE_LOG = "/home/m30w/myenv/logs/heart_rate.txt";
+const string HEART_RATE_LOG = "/home/m30w/myenv/logs/heart_rate.txt"; // The exact location
 const string TEMP_LOG       = "/home/m30w/myenv/logs/temperature.txt";
 const string MOTION_LOG     = "/home/m30w/myenv/logs/motion.txt";
+// The ending 'LOG' stands for 'log file.'
+// It records events, data, or activities in a system or program over time.
+// Just like a notebook.
 
 const string CORE_WORDS_DIR    = "/home/m30w/myenv/Thresholds/core_words/";
 const string CORE_EMOTIONS_DIR = "/home/m30w/myenv/Thresholds/core_emotions/";
 const string BODY_LANGUAGE_DIR = "/home/m30w/myenv/Thresholds/body_language/";
+// The ending 'DIR' means 'directory.'
+// It's essentially the computer's way of organizing files.
+// Just like a folder on a computer, which helps ogranize documents.
 
 // All final files are stored in OUTPUT_DIR.
 const string OUTPUT_DIR = "/home/m30w/myenv/Thresholds/output/";
@@ -34,7 +39,7 @@ const string OUTPUT_DIR = "/home/m30w/myenv/Thresholds/output/";
 // Log file to be embedded at the bottom in small font.
 const string LOG_FILE = "/home/m30w/log.txt";
 
-// Path for USB camera snapshot.
+// The location of the USB camera snapshot.
 const string CAMERA_IMAGE = OUTPUT_DIR + "camera_snapshot.jpg";
 
 // Final output image name must be exactly "state_profile-0.jpg".
@@ -47,41 +52,58 @@ const int ERR_NO_CORE_WORDS = 3;
 const int ERR_NO_CORE_EMOTIONS = 4;
 const int ERR_NO_BODY_LANG = 5;
 const int ERR_NO_CAMERA = 2;
+// Numbers is used to categorize errors
 
 // ---------------------------
 // Utility Functions
 // ---------------------------
-vector<string> readLogFile(const string &filePath) {
-    vector<string> lines;
-    ifstream file(filePath);
+vector<string> readLogFile(const string &filePath)
+{
+    vector<string> lines; // A dynamic array types string named 'lines'
+    ifstream file(filePath); // 'ifstream' allows to read data from files on computer
     string line;
-    while(getline(file, line)) {
+    while(getline(file, line))
+    {
         if(!line.empty())
             lines.push_back(line);
     }
     return lines;
+    // All of this only happend when 'filePath' opened successfully
 }
 
-string readFileContents(const string &filePath) {
+string readFileContents(const string &filePath)
+{
     ifstream ifs(filePath);
-    stringstream ss;
+    stringstream ss; // 'stringstream' allows to read and write data into a string
     ss << ifs.rdbuf();
     return ss.str();
+    // All of this only happend when 'filePath' opened successfully
 }
 
-string escapeShellArg(const string &s) {
+string escapeShellArg(const string &s) 
+{
     string res;
-    for (char c : s) {
+    for (char c : s)
+    {
         if (c == '\'')
             res += "'\\''";
         else
             res += c;
     }
     return res;
+    // Checking if any character 'c' in the string 's' is a single quote.
+    // If it is a single quote, it appends the sequence '\'\'' to the res string.
+    // This is a way to "escape" the single quote so the shell treats it as a literal single quote and not as the end of a quoted argument.
+    // If it isn't a single quote, it appends the original character c to the res string without any changes.
+
+    // !!! Not Really Understand the purpose of this !!!
 }
 
-bool fileExists(const string &filePath) {
+bool fileExists(const string &filePath)
+{
     return fs::exists(filePath);
+    // Will return true if filePath exists
+    // Will return false if filePath doesn't exist
 }
 
 // ---------------------------
