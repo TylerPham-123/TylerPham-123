@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <vector>
 
 using namespace std;
 
@@ -424,21 +425,36 @@ void testArrayInsertionSort() {
 
 // TODO: Add Playlist ADT here.
 
+// ***** PART 3 ****
+
+enum class PlaybackMode {
+    LOOP,
+    RANDOM,
+    ONCE
+};
+
 template<typename T>
 class Playlist {
 private:
-    LinkedList<T> songs; // Use LinkedList to store the playlist
-    int currentSongIndex; // Tracks the current song being played
+    LinkedList<T> songs;
+    int currentSongIndex;
+    PlaybackMode mode;
+    std::vector<int> randomHistory;
+    bool isShuffled;
+
+    void shuffleSongs() {
+        std::srand(time(nullptr));
+        randomHistory.clear();
+        isShuffled = true;
+    }
 
 public:
-    Playlist() : currentSongIndex(0) {}
+    Playlist() : currentSongIndex(0), mode(PlaybackMode::ONCE), isShuffled(false) {}
 
-    // Add a song to the playlist
     void addSong(const T &song) {
         songs.insert(songs.getLength() + 1, song);
     }
 
-    // Remove a song from the playlist by position
     void removeSong(int position) {
         if (position >= 1 && position <= songs.getLength()) {
             songs.remove(position);
@@ -450,7 +466,6 @@ public:
         }
     }
 
-    // Play the current song
     T playCurrentSong() const {
         if (songs.isEmpty()) {
             throw std::runtime_error("Playlist is empty. No song to play.");
@@ -458,31 +473,102 @@ public:
         return songs.getEntry(currentSongIndex + 1);
     }
 
-    // Skip to the next song
     void nextSong() {
         if (songs.isEmpty()) {
             throw std::runtime_error("Playlist is empty. No next song.");
         }
-        currentSongIndex = (currentSongIndex + 1) % songs.getLength();
+
+        switch (mode) {
+            case PlaybackMode::LOOP:
+                currentSongIndex = (currentSongIndex + 1) % songs.getLength();
+                break;
+            case PlaybackMode::RANDOM:
+                if (!isShuffled) {
+                    shuffleSongs();
+                }
+                if (randomHistory.size() == songs.getLength()) {
+                    randomHistory.clear();
+                }
+                do {
+                    currentSongIndex = std::rand() % songs.getLength();
+                } while (std::find(randomHistory.begin(), randomHistory.end(), currentSongIndex) != randomHistory.end());
+                randomHistory.push_back(currentSongIndex);
+                break;
+            case PlaybackMode::ONCE:
+                if (currentSongIndex + 1 < songs.getLength()) {
+                    currentSongIndex++;
+                } else {
+                    throw std::runtime_error("End of playlist reached.");
+                }
+                break;
+        }
     }
 
-    // Go back to the previous song
     void previousSong() {
         if (songs.isEmpty()) {
             throw std::runtime_error("Playlist is empty. No previous song.");
         }
-        currentSongIndex = (currentSongIndex - 1 + songs.getLength()) % songs.getLength();
+
+        if (mode == PlaybackMode::RANDOM) {
+            if (randomHistory.empty()) {
+                throw std::runtime_error("No previous song in RANDOM mode.");
+            }
+            randomHistory.pop_back();
+            if (!randomHistory.empty()) {
+                currentSongIndex = randomHistory.back();
+            }
+        } else {
+            currentSongIndex = (currentSongIndex - 1 + songs.getLength()) % songs.getLength();
+        }
     }
 
-    // Clear the playlist
+    void setMode(PlaybackMode newMode) {
+        mode = newMode;
+        if (mode == PlaybackMode::RANDOM) {
+            shuffleSongs();
+        }
+    }
+
+    PlaybackMode getMode() const {
+        return mode;
+    }
+
     void clearPlaylist() {
         songs.clear();
         currentSongIndex = 0;
+        randomHistory.clear();
+        isShuffled = false;
     }
 
-    // Get the total number of songs in the playlist
     int getTotalSongs() const {
         return songs.getLength();
+    }
+
+    T peekNextSong() const {
+        if (songs.isEmpty()) {
+            throw std::runtime_error("Playlist is empty. No next song.");
+        }
+
+        int nextIndex = currentSongIndex;
+        switch (mode) {
+            case PlaybackMode::LOOP:
+                nextIndex = (currentSongIndex + 1) % songs.getLength();
+                break;
+            case PlaybackMode::RANDOM:
+                if (!isShuffled) {
+                    throw std::runtime_error("Cannot peek next song in RANDOM mode.");
+                }
+                nextIndex = (currentSongIndex + 1) % songs.getLength();
+                break;
+            case PlaybackMode::ONCE:
+                if (currentSongIndex + 1 < songs.getLength()) {
+                    nextIndex = currentSongIndex + 1;
+                } else {
+                    throw std::runtime_error("End of playlist reached.");
+                }
+                break;
+        }
+        return songs.getEntry(nextIndex + 1);
     }
 };
 
