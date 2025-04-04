@@ -5,7 +5,7 @@
 
 using namespace std;
 
-template<typename T>
+template<typename T> // Makes the ListInterface an abstract base class that can define the common operations for lists of any type T
 class ListInterface {
 public:
     virtual bool isEmpty() const = 0;
