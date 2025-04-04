@@ -2,10 +2,11 @@
 #include <cassert>
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 using namespace std;
 
-template<typename T> // Makes the ListInterface an abstract base class that can define the common operations for lists of any type T
+template<typename T>
 class ListInterface {
 public:
     virtual bool isEmpty() const = 0;
@@ -114,6 +115,29 @@ void testArrayList() {
     catch (std::invalid_argument &err) {}
 
     // TODO: Finish adding tests.
+    
+    // Test inserting elements
+    assert(array0.insert(1, 10));
+    assert(array0.insert(2, 20));
+    assert(array0.insert(3, 30));
+    assert(array0.getLength() == 3);
+    assert(array0.getEntry(1) == 10);
+    assert(array0.getEntry(2) == 20);
+    assert(array0.getEntry(3) == 30);
+
+    // Test removing elements
+    assert(array0.remove(2));
+    assert(array0.getLength() == 2);
+    assert(array0.getEntry(1) == 10);
+    assert(array0.getEntry(2) == 30);
+
+    // Test setting an entry
+    array0.setEntry(2, 40);
+    assert(array0.getEntry(2) == 40);
+
+    // Test clearing the list
+    array0.clear();
+    assert(array0.isEmpty());
 }
 
 template<typename T>
@@ -262,6 +286,30 @@ public :
 void testLinkedList() {
     LinkedList<int> list0;
     // TODO: Add tests
+    assert(list0.isEmpty());
+
+    // Test inserting elements
+    assert(list0.insert(1, 10));
+    assert(list0.insert(2, 20));
+    assert(list0.insert(3, 30));
+    assert(list0.getLength() == 3);
+    assert(list0.getEntry(1) == 10);
+    assert(list0.getEntry(2) == 20);
+    assert(list0.getEntry(3) == 30);
+
+    // Test removing elements
+    assert(list0.remove(2));
+    assert(list0.getLength() == 2);
+    assert(list0.getEntry(1) == 10);
+    assert(list0.getEntry(2) == 30);
+
+    // Test setting an entry
+    list0.setEntry(2, 40);
+    assert(list0.getEntry(2) == 40);
+
+    // Test clearing the list
+    list0.clear();
+    assert(list0.isEmpty());
 }
 
 // ***** PART 2 *****
@@ -269,6 +317,17 @@ void testLinkedList() {
 template<typename ItemType>
 void insertionSort(ListInterface<ItemType> & list) {
     // TODO
+    int n = list.getLength();
+    for (int unsorted = 2; unsorted <= n; ++unsorted) {
+        ItemType nextItem = list.getEntry(unsorted);
+        int loc = unsorted - 1;
+
+        while ((loc > 0) && (list.getEntry(loc) > nextItem)) {
+            list.setEntry(loc + 1, list.getEntry(loc));
+            --loc;
+        }
+        list.setEntry(loc + 1, nextItem);
+    }
 }
 
 void fillRandom(LinkedList<int> & list, int n) {
@@ -365,20 +424,227 @@ void testArrayInsertionSort() {
 
 // TODO: Add Playlist ADT here.
 
+template<typename T>
+class Playlist {
+private:
+    LinkedList<T> songs; // Use LinkedList to store the playlist
+    int currentSongIndex; // Tracks the current song being played
+
+public:
+    Playlist() : currentSongIndex(0) {}
+
+    // Add a song to the playlist
+    void addSong(const T &song) {
+        songs.insert(songs.getLength() + 1, song);
+    }
+
+    // Remove a song from the playlist by position
+    void removeSong(int position) {
+        if (position >= 1 && position <= songs.getLength()) {
+            songs.remove(position);
+            if (currentSongIndex >= position) {
+                currentSongIndex = std::max(0, currentSongIndex - 1);
+            }
+        } else {
+            throw std::invalid_argument("Invalid position to remove song.");
+        }
+    }
+
+    // Play the current song
+    T playCurrentSong() const {
+        if (songs.isEmpty()) {
+            throw std::runtime_error("Playlist is empty. No song to play.");
+        }
+        return songs.getEntry(currentSongIndex + 1);
+    }
+
+    // Skip to the next song
+    void nextSong() {
+        if (songs.isEmpty()) {
+            throw std::runtime_error("Playlist is empty. No next song.");
+        }
+        currentSongIndex = (currentSongIndex + 1) % songs.getLength();
+    }
+
+    // Go back to the previous song
+    void previousSong() {
+        if (songs.isEmpty()) {
+            throw std::runtime_error("Playlist is empty. No previous song.");
+        }
+        currentSongIndex = (currentSongIndex - 1 + songs.getLength()) % songs.getLength();
+    }
+
+    // Clear the playlist
+    void clearPlaylist() {
+        songs.clear();
+        currentSongIndex = 0;
+    }
+
+    // Get the total number of songs in the playlist
+    int getTotalSongs() const {
+        return songs.getLength();
+    }
+};
+
+//Test Cases for Playlist ADT
+
+void testPlaylist() {
+    Playlist<std::string> playlist;
+
+    // Test adding songs
+    playlist.addSong("Song 1");
+    playlist.addSong("Song 2");
+    playlist.addSong("Song 3");
+    assert(playlist.getTotalSongs() == 3);
+
+    // Test playing the current song
+    assert(playlist.playCurrentSong() == "Song 1");
+
+    // Test skipping to the next song
+    playlist.nextSong();
+    assert(playlist.playCurrentSong() == "Song 2");
+
+    // Test going back to the previous song
+    playlist.previousSong();
+    assert(playlist.playCurrentSong() == "Song 1");
+
+    // Test removing a song
+    playlist.removeSong(2); // Remove "Song 2"
+    assert(playlist.getTotalSongs() == 2);
+    assert(playlist.playCurrentSong() == "Song 1");
+
+    // Test clearing the playlist
+    playlist.clearPlaylist();
+    assert(playlist.getTotalSongs() == 0);
+
+    // Test exception handling for empty playlist
+    try {
+        playlist.playCurrentSong();
+        assert(false); // Should not reach here
+    } catch (const std::runtime_error &e) {}
+
+    try {
+        playlist.nextSong();
+        assert(false); // Should not reach here
+    } catch (const std::runtime_error &e) {}
+}
+
 // ***** PART 4 ****
 
 template<class ItemType>
 class SmartLinkedList : public ListInterface<ItemType> {
-private :
+private:
     // TODO: Finish with smart pointers.
     //       Use LinkedList implementation as a guide replacing raw pointers with shared pointers.
+    struct Node {
+        ItemType value;
+        std::shared_ptr<Node> next;
+        Node(const ItemType &value) : value(value), next(nullptr) {}
+    };
+
+    std::shared_ptr<Node> headPtr;
+    int itemCount;
+
+    std::shared_ptr<Node> getNodeAt(int position) const {
+        assert(position >= 1 && position <= itemCount);
+        auto curPtr = headPtr;
+        for (int skip = 1; skip < position; ++skip) {
+            curPtr = curPtr->next;
+        }
+        return curPtr;
+    }
+
 public:
     // TODO: Finish with smart pointers.
+    SmartLinkedList() : headPtr(nullptr), itemCount(0) {}
+
+    bool isEmpty() const override {
+        return itemCount == 0;
+    }
+
+    int getLength() const override {
+        return itemCount;
+    }
+
+    bool insert(int newPosition, const ItemType &newEntry) override {
+        bool ableToInsert = (newPosition >= 1) && (newPosition <= itemCount + 1);
+        if (ableToInsert) {
+            auto newNodePtr = std::make_shared<Node>(newEntry);
+            if (newPosition == 1) {
+                newNodePtr->next = headPtr;
+                headPtr = newNodePtr;
+            } else {
+                auto prevPtr = getNodeAt(newPosition - 1);
+                newNodePtr->next = prevPtr->next;
+                prevPtr->next = newNodePtr;
+            }
+            ++itemCount;
+        }
+        return ableToInsert;
+    }
+
+    bool remove(int position) override {
+        bool ableToRemove = (position >= 1) && (position <= itemCount);
+        if (ableToRemove) {
+            if (position == 1) {
+                headPtr = headPtr->next;
+            } else {
+                auto prevPtr = getNodeAt(position - 1);
+                prevPtr->next = prevPtr->next->next;
+            }
+            --itemCount;
+        }
+        return ableToRemove;
+    }
+
+    void clear() override {
+        headPtr = nullptr;
+        itemCount = 0;
+    }
+
+    ItemType getEntry(int position) const override {
+        bool ableToGet = (position >= 1) && (position <= itemCount);
+        if (ableToGet) {
+            return getNodeAt(position)->value;
+        } else {
+            throw std::invalid_argument("getEntry() called with an invalid position.");
+        }
+    }
+
+    void setEntry(int position, const ItemType &newEntry) override {
+        auto nodePtr = getNodeAt(position);
+        nodePtr->value = newEntry;
+    }
 }; // end SmartLinkedList
 
 void testSmartLinkedList() {
     //SmartLinkedList<int> list0;
     // TODO: Add tests
+    SmartLinkedList<int> list0;
+    assert(list0.isEmpty());
+
+    // Test inserting elements
+    assert(list0.insert(1, 10));
+    assert(list0.insert(2, 20));
+    assert(list0.insert(3, 30));
+    assert(list0.getLength() == 3);
+    assert(list0.getEntry(1) == 10);
+    assert(list0.getEntry(2) == 20);
+    assert(list0.getEntry(3) == 30);
+
+    // Test removing elements
+    assert(list0.remove(2));
+    assert(list0.getLength() == 2);
+    assert(list0.getEntry(1) == 10);
+    assert(list0.getEntry(2) == 30);
+
+    // Test setting an entry
+    list0.setEntry(2, 40);
+    assert(list0.getEntry(2) == 40);
+
+    // Test clearing the list
+    list0.clear();
+    assert(list0.isEmpty());
 }
 
 int main() {
@@ -389,5 +655,7 @@ int main() {
     testLinkedInsertionSort();
     testArrayInsertionSort();
     testSmartLinkedList();
+    testPlaylist(); // Test the Playlist ADT
+
     return 0;
 }
